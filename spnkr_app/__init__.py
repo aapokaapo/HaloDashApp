@@ -3,6 +3,7 @@ import asyncio
 from app.tokens import AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, REDIRECT_URI, AZURE_REFRESH_TOKEN
 from aiohttp import ClientSession
 from spnkr import HaloInfiniteClient, AzureApp, refresh_player_tokens, authenticate_player
+from spnkr.film import read_highlight_events
 
 
 async def main():
@@ -14,17 +15,11 @@ async def main():
         player = await refresh_player_tokens(session, app, AZURE_REFRESH_TOKEN)
         client = HaloInfiniteClient(
             session=session,
-            spartan_token=f"{player.spartan_token}",
-            clearance_token=f"{player.clearance_token}",
+            spartan_token=f"{player.spartan_token.token}",
+            clearance_token=f"{player.clearance_token.token}",
             # Optional, default rate is 5.
             requests_per_second=5,
         )
-        print(f"Spartan token: {player.spartan_token.token}")  # Valid for 4 hours.
-        print(f"Clearance token: {player.clearance_token.token}")
-        print(f"Xbox Live player ID (XUID): {player.player_id}")
-        print(f"Xbox Live gamertag: {player.gamertag}")
-        print(f"Xbox Live authorization: {player.xbl_authorization_header_value}")
-        print(player.is_valid)
 
         yield client
 
@@ -39,8 +34,15 @@ async def get_match(match_id):
     client = await awaitable
     resp = await client.stats.get_match_stats(match_id)
     match_stats = await resp.parse()
-    print("HI")
-    print(match_stats.match_id)
+    return match_stats
+
+
+async def get_match_history(gamer_tag):
+    awaitable = get_client()
+    client = await awaitable
+    resp = await client.stats.get_match_history(gamer_tag, count=2)
+    match_history = await resp.parse()
+    return match_history.results
 
 
 async def get_user(gamer_tag):
@@ -50,3 +52,25 @@ async def get_user(gamer_tag):
     user = await resp.parse()
     return user
 
+
+async def get_gamemode(asset_id, version_id):
+    awaitable = get_client()
+    client = await awaitable
+    resp = await client.discovery_ugc.get_ugc_game_variant(asset_id, version_id)
+    gamemode = await resp.parse()
+    return gamemode
+
+
+async def get_map(asset_id, version_id):
+    awaitable = get_client()
+    client = await awaitable
+    resp = await client.discovery_ugc.get_map(asset_id, version_id)
+    map_data = await resp.parse()
+    return map_data
+
+
+async def get_film(match_id):
+    awaitable = get_client()
+    client = await awaitable
+    events = await read_highlight_events(client, match_id)
+    return events
