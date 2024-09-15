@@ -7,7 +7,24 @@ import asyncio
 
 from datetime import datetime
 
-app = Dash()
+import os
+
+from dash import Dash, DiskcacheManager, CeleryManager, Input, Output, html, callback
+
+if 'REDIS_URL' in os.environ:
+    # Use Redis & Celery if REDIS_URL set as an env variable
+    from celery import Celery
+    celery_app = Celery(__name__, broker=os.environ['REDIS_URL'], backend=os.environ['REDIS_URL'])
+    background_callback_manager = CeleryManager(celery_app)
+
+else:
+    # Diskcache for non-production apps when developing locally
+    print("Redis & Celery not available. Using Diskcache")
+    import diskcache
+    cache = diskcache.Cache("./cache")
+    background_callback_manager = DiskcacheManager(cache)
+
+app = Dash(__name__)
 
 app.layout = [
     html.H1(children='Title of Dash App', style={'textAlign':'center'}),
@@ -19,7 +36,9 @@ app.layout = [
 
 @callback(
     Output('dropdown-selection', 'options'),
-    Input('search_gamertag', 'value')
+    Input('search_gamertag', 'value'),
+    background=True,
+    manager=background_callback_manager,
 )
 def get_matches(gamer_tag):
     print(f"started {datetime.now()}")
