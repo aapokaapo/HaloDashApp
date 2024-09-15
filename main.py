@@ -40,8 +40,7 @@ app.layout = [
 )
 def get_matches(gamer_tag):
     if not gamer_tag:
-        pass
-    print(f"started {datetime.now()}")
+        return
     match_history = asyncio.run(get_match_history(gamer_tag))
     options = []
     for match in match_history:
@@ -50,7 +49,6 @@ def get_matches(gamer_tag):
         option = {'label': f"{gamemode} - {map_name}", 'value': f"{match.match_id}"}
         options.append(option)
         set_props('dropdown-selection', {'options': options})
-    print(f"done {datetime.now()}")
     # return options
 
 
@@ -59,6 +57,8 @@ def get_matches(gamer_tag):
     Input('dropdown-selection', 'value')
 )
 def get_stats(match_id):
+    if not match_id:
+        return None
     match_stats = asyncio.run(get_match(match_id))
     return match_stats_layout(match_stats)
 
