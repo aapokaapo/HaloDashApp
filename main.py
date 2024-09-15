@@ -1,4 +1,5 @@
 from dash_app.match_stats import match_stats_layout
+from dash_app import search_bar
 import plotly.express as px
 import pandas as pd
 from spnkr_app import *
@@ -26,8 +27,7 @@ app = Dash(__name__)
 
 app.layout = [
     html.H1(children='Title of Dash App', style={'textAlign': 'center'}),
-    dcc.Input(id="search_gamertag", type="text", placeholder="", debounce=True),
-    dcc.Dropdown(id='dropdown-selection'),
+    html.Div(id="search_bar", children=search_bar.set_layout()),
     html.Div(id="match_data")
 ]
 
@@ -42,14 +42,7 @@ def get_matches(gamer_tag):
     if not gamer_tag:
         return
     match_history = asyncio.run(get_match_history(gamer_tag))
-    options = []
-    for match in match_history:
-        gamemode = asyncio.run(get_gamemode(match.match_info.ugc_game_variant.asset_id, match.match_info.ugc_game_variant.version_id)).public_name
-        map_name = asyncio.run(get_map(match.match_info.map_variant.asset_id, match.match_info.map_variant.version_id)).public_name
-        option = {'label': f"{gamemode} - {map_name}", 'value': f"{match.match_id}"}
-        options.append(option)
-        set_props('dropdown-selection', {'options': options})
-    # return options
+    search_bar.update_options(match_history)
 
 
 @callback(
