@@ -6,13 +6,27 @@ from spnkr import HaloInfiniteClient, AzureApp, refresh_player_tokens, authentic
 from spnkr.film import read_highlight_events
 
 
+app = AzureApp(AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, REDIRECT_URI)
+
+
+async def get_xbl_client(app):
+    async with ClientSession() as session:
+        player = await refresh_player_tokens(session, app, AZURE_REFRESH_TOKEN)
+        print(f"Refresing player tokens. Player is valid: {player.is_valid}")
+        return player
+
+
+player = asyncio.run(get_xbl_client(app))
+
+
 async def main():
-    app = AzureApp(AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, REDIRECT_URI)
 
     async with ClientSession() as session:
-        #refresh_token = await authenticate_player(session, app)
-        #print(refresh_token)
-        player = await refresh_player_tokens(session, app, AZURE_REFRESH_TOKEN)
+        # refresh_token = await authenticate_player(session, app)
+        # print(refresh_token)
+        if not player.is_valid:
+            asyncio.run(get_xbl_client(app))
+
         client = HaloInfiniteClient(
             session=session,
             spartan_token=f"{player.spartan_token.token}",
@@ -37,10 +51,10 @@ async def get_match(match_id):
     return match_stats
 
 
-async def get_match_history(gamer_tag):
+async def get_match_history(gamer_tag, count=25, start=0, match_type="all"):
     awaitable = get_client()
     client = await awaitable
-    resp = await client.stats.get_match_history(gamer_tag, count=2)
+    resp = await client.stats.get_match_history(gamer_tag, start=start, count=count, match_type=match_type)
     match_history = await resp.parse()
     return match_history.results
 
