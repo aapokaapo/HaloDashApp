@@ -6,6 +6,10 @@ from . import film_events
 
 def get_team_stats(match_stats):
     stats = []
+    fig = film_events.create_kills_chart(match_stats)
+    stats.append(html.Div(fig))
+    fig2 = film_events.create_timeline_chart(match_stats)
+    stats.append(html.Div(fig2))
     for team in match_stats.teams:
         categories = []
         for category in team.stats:
@@ -18,10 +22,6 @@ def get_team_stats(match_stats):
                 categories.append(html.Div([html.Div(f"{category[0]}"), html.Div(category_items)]))
         stats.append(html.Div([html.Div(f"{TEAM_MAP[team.team_id]}"), html.Div(categories)]))
 
-    fig = film_events.create_kills_chart(match_stats)
-    stats.append(html.Div(fig))
-    fig2 = film_events.create_timeline_chart(match_stats)
-    stats.append(html.Div(fig2))
     return stats
 
 

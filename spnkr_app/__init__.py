@@ -25,7 +25,7 @@ async def main():
         # refresh_token = await authenticate_player(session, app)
         # print(refresh_token)
         if not player.is_valid:
-            asyncio.run(get_xbl_client(app))
+            await get_xbl_client(app)
 
         client = HaloInfiniteClient(
             session=session,

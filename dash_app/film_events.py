@@ -26,7 +26,7 @@ def create_timeline_chart(match_stats):
                 }
             )
     df = pd.DataFrame(data=data)
-    fig = px.line(df, x='time', y='kill_count', color='team', line_group='gamertag')
+    fig = px.line(df, x='time', y='kill_count', color='team',)
     graph = dcc.Graph(figure=fig)
     return graph
 
