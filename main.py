@@ -1,4 +1,4 @@
-from dash_app.match_stats import match_stats_layout
+from dash_app import match_data
 from dash_app import search_bar
 import plotly.express as px
 import pandas as pd
@@ -34,14 +34,24 @@ app.layout = [
 
 @callback(
     # Output('dropdown-selection', 'options'),
-    Input('search_gamertag', 'value'),
+    [
+        Input('search_gamertag', 'value'),
+        Input('count', 'value'),
+        Input('start', 'value'),
+    ],
     background=True,
+    cancel=[
+        Input('search_gamertag', 'value'),
+        Input('count', 'value'),
+        Input('count', 'value'),
+    ],
     manager=background_callback_manager,
 )
-def get_matches(gamer_tag):
+def get_matches(gamer_tag, count, start):
     if not gamer_tag:
         return
-    match_history = asyncio.run(get_match_history(gamer_tag))
+    set_props('dropdown-selection', {'options': []})
+    match_history = asyncio.run(get_match_history(gamer_tag, count, start))
     search_bar.update_options(match_history)
 
 
@@ -53,7 +63,7 @@ def get_stats(match_id):
     if not match_id:
         return None
     match_stats = asyncio.run(get_match(match_id))
-    return match_stats_layout(match_stats)
+    return match_data.set_layout(match_stats)
 
 
 if __name__ == '__main__':
