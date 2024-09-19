@@ -25,6 +25,8 @@ else:
 
 app = Dash(__name__)
 
+server = app.server
+
 app.layout = [
     html.H1(children='Title of Dash App', style={'textAlign': 'center'}),
     html.Div(id="search_bar", children=search_bar.set_layout()),
@@ -52,7 +54,7 @@ def get_matches(gamer_tag, count, start):
         return
     set_props('dropdown-selection', {'options': []})
     match_history = asyncio.run(get_match_history(gamer_tag, count, start))
-    search_bar.update_options(match_history)
+    search_bar.update_options(match_history, start)
 
 
 @callback(

@@ -2,14 +2,12 @@ from dash import html, dcc
 from spnkr_app import *
 from spnkr.tools import TEAM_MAP
 from . import film_events
+import plotly.express as px
+import pandas as pd
 
 
 def get_team_stats(match_stats):
     stats = []
-    fig = film_events.create_kills_chart(match_stats)
-    stats.append(html.Div(fig))
-    fig2 = film_events.create_timeline_chart(match_stats)
-    stats.append(html.Div(fig2))
     for team in match_stats.teams:
         categories = []
         for category in team.stats:
@@ -23,6 +21,26 @@ def get_team_stats(match_stats):
         stats.append(html.Div([html.Div(f"{TEAM_MAP[team.team_id]}"), html.Div(categories)]))
 
     return stats
+
+
+def create_team_damage_graph(match_stats):
+    data = []
+    users = asyncio.run(get_users_for_xuids([player.player_id for player in match_stats.players]))
+    for player in match_stats.players:
+        user = next(user for user in users if f"xuid({user.xuid})" == f"{player.player_id}")
+        team_stats = next(stats for stats in player.player_team_stats if stats.team_id == player.last_team_id)
+        damage_dealt = team_stats.stats.core_stats.damage_dealt
+        data.append({
+            'gamertag': user.gamertag,
+            'team': TEAM_MAP[player.last_team_id],
+            'damage_dealt': damage_dealt
+        })
+    df = pd.DataFrame(data=data)
+    fig = px.bar(df, x='team', y='damage_dealt', color='gamertag', category_orders={'team':['Eagle', 'Cobra']})
+    graph = dcc.Graph(figure=fig)
+    
+    return graph
+
 
 
 def set_layout(match_stats):
@@ -51,7 +69,12 @@ def set_layout(match_stats):
         ),
         html.Div(
             id='team_stats',
-            children=html.Div(get_team_stats(match_stats))
+            children=[
+                html.Div(create_team_damage_graph(match_stats)),
+                html.Div(film_events.create_kills_chart(match_stats)),
+                html.Div(film_events.create_timeline_chart(match_stats)),
+                html.Div(get_team_stats(match_stats)),
+            ]
         ),
         html.Div(id='player_stats')
     ])

@@ -4,6 +4,7 @@ from dash import html, dcc
 import asyncio
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 
 def create_timeline_chart(match_stats):
@@ -12,7 +13,7 @@ def create_timeline_chart(match_stats):
     data = []
     for event in film_events:
         if event.event_type == "kill":
-            team_id = [player.last_team_id for player in match_stats.players if player.player_id == f"xuid({event.xuid})"][0]
+            team_id = next(player.last_team_id for player in match_stats.players if f"{player.player_id}" == f"xuid({event.xuid})")
             try:
                 teams_kills[team_id] += 1
             except KeyError:
@@ -26,7 +27,7 @@ def create_timeline_chart(match_stats):
                 }
             )
     df = pd.DataFrame(data=data)
-    fig = px.line(df, x='time', y='kill_count', color='team',)
+    fig = px.line(df, x='time', y='kill_count', color='team', category_orders={'team': ['Eagle', 'Cobra']})
     graph = dcc.Graph(figure=fig)
     return graph
 
@@ -34,21 +35,19 @@ def create_timeline_chart(match_stats):
 def create_kills_chart(match_stats):
     film_events = asyncio.run(spnkr_app.get_film(match_stats.match_id))
     time_tolerance = 3
-    kills = {}
+    kills = []
+    data = {}
     for event in film_events:
         if event.event_type == "kill":
-            killed_player = [death_event.gamertag for death_event in film_events if ((-time_tolerance + event.time_ms <= death_event.time_ms <= time_tolerance + event.time_ms) and death_event.event_type == 'death')][0]
-            try:
-                kills[event.gamertag][killed_player] += 1
-            except KeyError:
-                try:
-                    kills[event.gamertag][killed_player] = 0
-                    kills[event.gamertag][killed_player] += 1
-                except KeyError:
-                    kills[event.gamertag] = {}
-                    kills[event.gamertag][killed_player] = 0
-                    kills[event.gamertag][killed_player] += 1
-    df = pd.DataFrame.from_dict(data=kills, orient='index')
-    fig = px.bar(df, title="Kills", labels={"index": "Gamertag", "value": "Kills", "variable": "Victim"})
+            team_id = next(player.last_team_id for player in match_stats.players if f"{player.player_id}" == f"xuid({event.xuid})")
+            killed_player = next(death_event.gamertag for death_event in film_events if ((-time_tolerance + event.time_ms <= death_event.time_ms <= time_tolerance + event.time_ms) and death_event.event_type == 'death'))
+            
+            kills.append({
+                    'killer': event.gamertag,
+                    'victim': killed_player,
+                    'team': TEAM_MAP[team_id]
+            })
+    df = pd.DataFrame(data=kills)
+    fig = px.bar(df, x='killer', color='victim', category_orders={'team': ['Eagle', 'Cobra']})
     graph = dcc.Graph(figure=fig)
     return graph

@@ -15,11 +15,13 @@ def set_layout():
     return layout
 
 
-def update_options(match_history):
+def update_options(match_history, start):
     options = []
+    index = start
     for match in match_history:
+        index += 1
         gamemode = asyncio.run(get_gamemode(match.match_info.ugc_game_variant.asset_id, match.match_info.ugc_game_variant.version_id)).public_name
         map_name = asyncio.run(get_map(match.match_info.map_variant.asset_id, match.match_info.map_variant.version_id)).public_name
-        option = {'label': f"{gamemode} - {map_name}", 'value': f"{match.match_id}"}
+        option = {'label': f"{index}: {gamemode} - {map_name}", 'value': f"{match.match_id}"}
         options.append(option)
         set_props('dropdown-selection', {'options': options})

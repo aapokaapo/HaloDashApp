@@ -67,6 +67,14 @@ async def get_user(gamer_tag):
     return user
 
 
+async def get_users_for_xuids(xuids):
+    awaitable = get_client()
+    client = await awaitable
+    resp = await client.profile.get_users_by_id(xuids)
+    users = await resp.parse()
+    return users
+
+
 async def get_gamemode(asset_id, version_id):
     awaitable = get_client()
     client = await awaitable
