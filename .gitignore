@@ -1,3 +1,5 @@
-/app/tokens.py
-/cache/
-/venv/
+app/tokens.py
+cache/
+venv/
+.idea
+__pycache__/
