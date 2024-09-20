@@ -13,7 +13,7 @@ pip3 install -r requirements.txt
 ```
 Create Azure AD app and acquire refresh token using the instructions found [here](https://acurtis166.github.io/SPNKr/getting-started/)
 
-Put the required variable into `app/tokens.py`
+Put the required variables into `app/tokens.py`
 ```
 AZURE_CLIENT_ID = "string"
 AZURE_CLIENT_SECRET = "string"
