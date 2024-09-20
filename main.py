@@ -28,7 +28,9 @@ app = Dash(__name__)
 server = app.server
 
 app.layout = [
-    html.H1(children='Title of Dash App', style={'textAlign': 'center'}),
+    html.H1(id="header", children="AapoKaapo's Stats Site", style={'textAlign': 'center'}),
+    html.P("This site is still in early development. This site does not use cookies(yet) and thus no data is saved. The site may or may not work. -AapoKaapo"),
+    html.Div(dcc.Link(href='https://github.com/aapokaapo/HaloDashApp', target='header')),
     html.Div(id="search_bar", children=search_bar.set_layout()),
     html.Div(id="match_data")
 ]

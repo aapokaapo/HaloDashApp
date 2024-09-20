@@ -11,6 +11,7 @@ app = AzureApp(AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, REDIRECT_URI)
 
 async def get_xbl_client(app):
     async with ClientSession() as session:
+        global player
         player = await refresh_player_tokens(session, app, AZURE_REFRESH_TOKEN)
         print(f"Refresing player tokens. Player is valid: {player.is_valid}")
         return player
@@ -22,8 +23,6 @@ player = asyncio.run(get_xbl_client(app))
 async def main():
 
     async with ClientSession() as session:
-        # refresh_token = await authenticate_player(session, app)
-        # print(refresh_token)
         if not player.is_valid:
             await get_xbl_client(app)
 

@@ -7,8 +7,8 @@ def set_layout():
     layout = html.Div(
         [
             dcc.Input(id="search_gamertag", type="text", placeholder="Search for Gamer Tag...", debounce=True),
-            dcc.Input(id="count", type="number", value=25, min=1, max=25, name="Count", step=1, debounce=True),
-            dcc.Input(id="start", type="number", value=0, min=0, name="Start", step=1, debounce=True),
+            html.Div(["Count", dcc.Input(id="count", type="number", value=25, min=1, max=25, name="Count", step=1, debounce=True)]),
+            html.Div(["Start", dcc.Input(id="start", type="number", value=0, min=0, name="Start", step=1, debounce=True)]),
             dcc.Dropdown(id='dropdown-selection'),
         ]
     )
