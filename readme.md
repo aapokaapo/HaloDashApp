@@ -28,6 +28,6 @@ python3 main.python3
 ```
 For production level deployement you should use a WSGI, such as `gunicorn`
 ```
-gunicorn -w 2 main:servers
+gunicorn -w 2 main:server
 ```
 
