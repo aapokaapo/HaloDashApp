@@ -42,6 +42,41 @@ def create_team_damage_graph(match_stats):
     return graph
 
 
+def create_team_flag_stats_graph(match_stats):
+    data = []
+    users = asyncio.run(get_users_for_xuids([player.player_id for player in match_stats.players]))
+    for player in match_stats.players:
+        user = next(user for user in users if f"xuid({user.xuid})" == f"{player.player_id}")
+        team_stats = next(stats for stats in player.player_team_stats if stats.team_id == player.last_team_id)
+        team_id = player.last_team_id
+        flag_stats = team_stats.stats.capture_the_flag_stats
+        data.append({
+            'gamertag': user.gamertag,
+            'team': TEAM_MAP[team_id],
+            'flag_capture_assists': flag_stats.flag_capture_assists,
+            'flag_captures': flag_stats.flag_captures,
+            'flag_grabs': flag_stats.flag_grabs,
+            'flag_steals': flag_stats.flag_steals,
+            'flag_returns': flag_stats.flag_returns,
+            'flag_secures': flag_stats.flag_secures
+        })
+    df = pd.DataFrame(data)
+    fig = px.bar(df, y=['flag_captures', 'flag_capture_assists', 'flag_grabs' 'flag_steals', 'flag_secures', 'flag_returns'], color='gamertag')
+    graph = dcc.Graph(figure=fig)
+    return graph
+
+
+def is_ctf(match_stats):
+    ctf_stats = []
+    team_stats = [player.player_team_stats for player in match_stats.players]
+    for stats in team_stats:
+        if stats[0].stats.capture_the_flag_stats:
+            ctf_stats.append(stats[0].stats.capture_the_flag_stats)
+    if ctf_stats:
+        print('This is Capture the Flag')
+        return True
+    return False
+
 
 def set_layout(match_stats):
     map_info = match_stats.match_info.map_variant
@@ -71,6 +106,7 @@ def set_layout(match_stats):
             id='team_stats',
             children=[
                 html.Div(create_team_damage_graph(match_stats)),
+                html.Div(create_team_flag_stats_graph(match_stats)) if is_ctf(match_stats) else None,
                 html.Div(film_events.create_kills_chart(match_stats)),
                 html.Div(film_events.create_timeline_chart(match_stats)),
                 html.Div(get_team_stats(match_stats)),
