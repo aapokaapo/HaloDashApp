@@ -61,22 +61,10 @@ def create_team_flag_stats_graph(match_stats):
             'flag_secures': flag_stats.flag_secures
         })
     df = pd.DataFrame(data)
-    fig = px.bar(df, y=['flag_captures', 'flag_capture_assists', 'flag_grabs' 'flag_steals', 'flag_secures', 'flag_returns'], color='gamertag')
+    fig = px.bar(df, x='gamertag', y='flag_grabs', color='gamertag')
     graph = dcc.Graph(figure=fig)
     return graph
-
-
-def is_ctf(match_stats):
-    ctf_stats = []
-    team_stats = [player.player_team_stats for player in match_stats.players]
-    for stats in team_stats:
-        if stats[0].stats.capture_the_flag_stats:
-            ctf_stats.append(stats[0].stats.capture_the_flag_stats)
-    if ctf_stats:
-        print('This is Capture the Flag')
-        return True
-    return False
-
+    
 
 def set_layout(match_stats):
     map_info = match_stats.match_info.map_variant
@@ -106,7 +94,7 @@ def set_layout(match_stats):
             id='team_stats',
             children=[
                 html.Div(create_team_damage_graph(match_stats)),
-                html.Div(create_team_flag_stats_graph(match_stats)) if is_ctf(match_stats) else None,
+                html.Div(create_team_flag_stats_graph(match_stats)) if match_stats.players[0].player_team_stats[0].stats.capture_the_flag_stats else None,
                 html.Div(film_events.create_kills_chart(match_stats)),
                 html.Div(film_events.create_timeline_chart(match_stats)),
                 html.Div(get_team_stats(match_stats)),

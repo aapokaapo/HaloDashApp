@@ -5,7 +5,14 @@ import asyncio
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import datetime
 
+
+def ms_to_mins_and_secs(ms):
+    minutes = ms // 60000
+    seconds = (ms % 60000) // 1000
+    return f"{minutes}:{seconds:02}"
+    
 
 def create_timeline_chart(match_stats):
     film_events = asyncio.run(spnkr_app.get_film(match_stats.match_id))
@@ -22,12 +29,13 @@ def create_timeline_chart(match_stats):
                 {
                     'team': TEAM_MAP[team_id],
                     'kill_count': teams_kills[team_id],
-                    'time': event.time_ms,
+                    'time': datetime.datetime.fromtimestamp(event.time_ms / 1000, tz=datetime.timezone.utc),
                     'gamertag': event.gamertag
                 }
             )
     df = pd.DataFrame(data=data)
     fig = px.line(df, x='time', y='kill_count', color='team', category_orders={'team': ['Eagle', 'Cobra']})
+    fig.update_xaxes(tickformat="%M:%S")
     graph = dcc.Graph(figure=fig)
     return graph
 

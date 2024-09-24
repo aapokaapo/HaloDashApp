@@ -9,6 +9,7 @@ from datetime import datetime
 
 import os
 from dash import Dash, DiskcacheManager, CeleryManager, Input, Output, html, callback, dcc, set_props
+import dash_bootstrap_components as dbc
 
 if 'REDIS_URL' in os.environ:
     # Use Redis & Celery if REDIS_URL set as an env variable
@@ -32,7 +33,8 @@ app.layout = [
     html.P("This site is still in early development. This site does not use cookies(yet) and thus no data is saved. The site may or may not work. -AapoKaapo"),
     html.Div(dcc.Link(href='https://github.com/aapokaapo/HaloDashApp', target='header')),
     html.Div(id="search_bar", children=search_bar.set_layout()),
-    html.Div(id="match_data")
+    html.Hr(),
+    html.Div(html.Div(id='match_data'))
 ]
 
 
@@ -56,7 +58,8 @@ def get_matches(gamer_tag, count, start):
         return
     set_props('dropdown-selection', {'options': []})
     match_history = asyncio.run(get_match_history(gamer_tag, count, start))
-    search_bar.update_options(match_history, start)
+    search_bar.update_options(match_history, start, count)
+    return
 
 
 @callback(
@@ -67,7 +70,7 @@ def get_stats(match_id):
     if not match_id:
         return None
     match_stats = asyncio.run(get_match(match_id))
-    return match_data.set_layout(match_stats)
+    return match_data.set_layout(match_stats), "hide"
 
 
 if __name__ == '__main__':
