@@ -36,7 +36,7 @@ def create_team_damage_graph(match_stats):
             'damage_dealt': damage_dealt
         })
     df = pd.DataFrame(data=data)
-    fig = px.bar(df, x='team', y='damage_dealt', color='gamertag', category_orders={'team':['Eagle', 'Cobra']})
+    fig = px.bar(df, x='team', y='damage_dealt', color='gamertag', category_orders={'team':['Eagle', 'Cobra']}, labels={'team': 'Team', 'damage_dealt': 'Damage Dealt', 'gamertag': 'Player'})
     graph = dcc.Graph(figure=fig)
     
     return graph
@@ -58,10 +58,12 @@ def create_team_flag_stats_graph(match_stats):
             'flag_grabs': flag_stats.flag_grabs,
             'flag_steals': flag_stats.flag_steals,
             'flag_returns': flag_stats.flag_returns,
-            'flag_secures': flag_stats.flag_secures
+            'flag_secures': flag_stats.flag_secures,
+            'flag_carriers_killed': flag_stats.flag_carriers_killed,
+            'flag_returners_killed': flag_stats.flag_returners_killed
         })
     df = pd.DataFrame(data)
-    fig = px.bar(df, x='gamertag', y='flag_grabs', color='gamertag')
+    fig = px.bar(df, x='gamertag', y=['flag_grabs', 'flag_capture_assists', 'flag_steals', 'flag_returns'], color='gamertag',)
     graph = dcc.Graph(figure=fig)
     return graph
     
@@ -77,8 +79,7 @@ def set_layout(match_stats):
         html.H1(f"Match Stats - {match_stats.match_id}", style={'text-align': 'center'}),
         html.Div(
             id='match_info',
-            children=html.Div(
-                children=[
+            children=[
                     # html.Div(f"Start time: {match_stats.match_info.start_time.strftime("%Y-%m-%d %H:%M:%S")}"),
                     # html.Div(f"End time: {match_stats.match_info.end_time.strftime("%Y-%m-%d %H:%M:%S")}"),
                     html.Div(f"Duration:{match_stats.match_info.duration}"),
@@ -87,8 +88,7 @@ def set_layout(match_stats):
                     html.Div([html.Div("Game Results:"),
                               html.Div([html.Div(f"{TEAM_MAP[team.team_id]}: {team.stats.core_stats.score}") for team in
                                         match_stats.teams])])
-                ]
-            )
+            ]
         ),
         html.Div(
             id='team_stats',
@@ -99,8 +99,7 @@ def set_layout(match_stats):
                 html.Div(film_events.create_timeline_chart(match_stats)),
                 html.Div(get_team_stats(match_stats)),
             ]
-        ),
-        html.Div(id='player_stats')
+        )
     ])
 
     return layout

@@ -34,7 +34,7 @@ def create_timeline_chart(match_stats):
                 }
             )
     df = pd.DataFrame(data=data)
-    fig = px.line(df, x='time', y='kill_count', color='team', category_orders={'team': ['Eagle', 'Cobra']})
+    fig = px.line(df, x='time', y='kill_count', color='team', category_orders={'team': ['Eagle', 'Cobra']}, labels={'time': 'Time', 'kill_count': 'Kill Count', 'team': 'Team'})
     fig.update_xaxes(tickformat="%M:%S")
     graph = dcc.Graph(figure=fig)
     return graph
@@ -56,6 +56,7 @@ def create_kills_chart(match_stats):
                     'team': TEAM_MAP[team_id]
             })
     df = pd.DataFrame(data=kills)
-    fig = px.bar(df, x='killer', color='victim', category_orders={'team': ['Eagle', 'Cobra']})
+    fig = px.bar(df, x='killer', color='victim', category_orders={'team': ['Eagle', 'Cobra']}, labels={'killer': 'Killer', 'victim': 'Player'})
+    fig.update_layout(yaxis_title='Kill Count')
     graph = dcc.Graph(figure=fig)
     return graph
