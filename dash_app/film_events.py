@@ -34,7 +34,7 @@ def create_timeline_chart(match_stats):
                 }
             )
     df = pd.DataFrame(data=data)
-    fig = px.line(df, x='time', y='kill_count', color='team', category_orders={'team': ['Eagle', 'Cobra']}, labels={'time': 'Time', 'kill_count': 'Kill Count', 'team': 'Team'})
+    fig = px.line(df, line_shape='linear', x='time', y='kill_count', color='team', category_orders={'team': ['Eagle', 'Cobra']}, labels={'time': 'Time', 'kill_count': 'Kill Count', 'team': 'Team'})
     fig.update_xaxes(tickformat="%M:%S")
     graph = dcc.Graph(figure=fig)
     return graph
@@ -42,13 +42,13 @@ def create_timeline_chart(match_stats):
 
 def create_kills_chart(match_stats):
     film_events = asyncio.run(spnkr_app.get_film(match_stats.match_id))
-    time_tolerance = 3
+    time_tolerance = 2
     kills = []
     data = {}
     for event in film_events:
         if event.event_type == "kill":
             team_id = next(player.last_team_id for player in match_stats.players if f"{player.player_id}" == f"xuid({event.xuid})")
-            killed_player = next(death_event.gamertag for death_event in film_events if ((-time_tolerance + event.time_ms <= death_event.time_ms <= time_tolerance + event.time_ms) and death_event.event_type == 'death'))
+            killed_player = next(death_event.gamertag for death_event in film_events if ((-time_tolerance + event.time_ms <= death_event.time_ms <= time_tolerance + event.time_ms) and death_event.event_type == 'death' and death_event.gamertag != event.gamertag))
             
             kills.append({
                     'killer': event.gamertag,
@@ -56,7 +56,6 @@ def create_kills_chart(match_stats):
                     'team': TEAM_MAP[team_id]
             })
     df = pd.DataFrame(data=kills)
-    fig = px.bar(df, x='killer', color='victim', category_orders={'team': ['Eagle', 'Cobra']}, labels={'killer': 'Killer', 'victim': 'Player'})
-    fig.update_layout(yaxis_title='Kill Count')
+    fig = px.bar(df, x='killer', color='victim', category_orders={'team': ['Eagle', 'Cobra']})
     graph = dcc.Graph(figure=fig)
     return graph

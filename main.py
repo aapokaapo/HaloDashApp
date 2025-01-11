@@ -90,7 +90,8 @@ def get_stats(match_id):
 )
 def update_stats(url, match_id):
     if not match_id and url:
-        match_id = url.replace('https://aapokaapostats.site', '')
+        match_id = url.replace('https://aapokaapostats.site/', '')
+        match_id = url.replace('http://127.0.0.1:8050/', '')
     if not match_id:
         return None
     try:
