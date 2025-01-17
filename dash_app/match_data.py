@@ -4,8 +4,7 @@ from spnkr.tools import TEAM_MAP
 from . import film_events
 import plotly.express as px
 import pandas as pd
-import plotly.graph_objects as go
-
+from app.stats import player_stats
 
 def create_player_stats(match_stats):
     
@@ -14,6 +13,9 @@ def create_player_stats(match_stats):
     teams = {}
     max_kills = max([team_stats.stats.core_stats.kills for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
     max_deaths = max([team_stats.stats.core_stats.deaths for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
+    min_deaths = min([team_stats.stats.core_stats.deaths for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
+    if min_deaths == 0:
+        min_deaths = 1
     max_assists = max([team_stats.stats.core_stats.assists for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
     max_damage = max([team_stats.stats.core_stats.damage_dealt for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
     max_damage_taken = max([team_stats.stats.core_stats.damage_taken for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
@@ -21,43 +23,16 @@ def create_player_stats(match_stats):
     max_shots_hit = max([team_stats.stats.core_stats.shots_hit for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
     max_shots_fired = max([team_stats.stats.core_stats.shots_fired for team_stats in [player.player_team_stats[0] for player in match_stats.players]])
     for player in match_stats.players:
-        
+        player_stats = player_stats.get_core_stats(player)
         user = next(user for user in users if f"xuid({user.xuid})" == f"{player.player_id}")
         
-        for team_stats in player.player_team_stats:
-            core_stats = team_stats.stats.core_stats
-            player_stats = {
-                "categories": ["kills", "deaths", "assists", "damage_dealt", "damage_taken", "accuracy", "shots_hit", "shots_fired"],
-                "raw_values": [core_stats.kills, core_stats.deaths, core_stats.assists, core_stats.damage_dealt, core_stats.damage_taken, core_stats.accuracy, core_stats.shots_hit, core_stats.shots_fired],
-                "scaled_values": [
-                    core_stats.kills / max_kills,
-                    1 - core_stats.deaths / max_deaths,
-                    core_stats.assists / max_assists,
-                    core_stats.damage_dealt / max_damage,
-                    core_stats.damage_taken / max_damage_taken,
-                    core_stats.accuracy / max_accuracy,
-                    core_stats.shots_hit / max_shots_hit,
-                    core_stats.shots_fired / max_shots_fired
-                    ]
-            }
-            df = pd.DataFrame(data=[player_stats])
-            fig = px.line_polar(df, title=f"{user.gamertag}", line_close=True, line_shape="spline", range_r=[0, 1.05], theta=["kills", "deaths", "assists", "damage_dealt", "damage_taken", "accuracy", "shots_hit", "shots_fired"], r=[
-                    core_stats.kills / max_kills,
-                    core_stats.deaths / max_deaths,
-                    core_stats.assists / max_assists,
-                    core_stats.damage_dealt / max_damage,
-                    core_stats.damage_taken / max_damage_taken,
-                    core_stats.accuracy / max_accuracy,
-                    core_stats.shots_hit / max_shots_hit,
-                    core_stats.shots_fired / max_shots_fired
-                    ])
-            
-            graph = dcc.Graph(figure=fig, config={"staticPlot": True}, style={'height': '50%', 'width': '100%', 'margin-left': 'auto', 'margin-right': 'auto', 'display': 'block'})
-            try:
-                teams[team_stats.team_id].append(graph)
-            except KeyError:
-                teams[team_stats.team_id] = []
-                teams[team_stats.team_id].append(graph)
+        fig = px.line_polar(title=f"{user.gamertag}", line_close=True, line_shape="spline", range_r=[0, 1.05], theta=player_stats['categories'], r=player_stats['scaled_values'])
+        graph = dcc.Graph(figure=fig, config={"staticPlot": True}, style={'height': '50%', 'width': '100%', 'margin-left': 'auto', 'margin-right': 'auto', 'display': 'block'})
+        try:
+            teams[team_stats.team_id].append(graph)
+        except KeyError:
+            teams[team_stats.team_id] = []
+            teams[team_stats.team_id].append(graph)
     team_divs = []
     for team in teams:
         team_divs.append(html.Div([html.Div(f"{TEAM_MAP[team]}"), html.Div(teams[team])], style={"width":f"{100/len(teams)-1}%", "float": "left"}))
@@ -141,7 +116,7 @@ def set_layout(match_stats):
     
     layout = html.Div([
         html.H1(f"Match Stats - {match_stats.match_id}", style={'text-align': 'center'}),
-        html.Div(html.Div(html.Img(src=f"{map_thumbnail}", style={'width': '90%', 'margin-left': 'auto', 'margin-right': 'auto', 'display': 'block'}))),
+        html.Div(html.Div(html.Img(src=f"{map_thumbnail}", style={'width': '90%', 'margin-left': 'auto', 'margin-right': 'auto', 'display': 'block', 'max-height': '500px'}))),
         html.Div(
             id='match_info',
             children=[
